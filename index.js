@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const app = express();
 const connection = require('./database/database')
 const Pergunta = require('./database/Pergunta')
+const Resposta = require('./database/Resposta')
 
 connection
     .authenticate()
@@ -65,12 +66,36 @@ app.get('/pergunta/:id', (req, res) => {
         where: {id: id}
     }).then(pergunta => {
         if (pergunta != undefined) {
-            res.render('pergunta', {
-                pergunta
+
+            Resposta.findAll({
+                where: {perguntaId: pergunta.id},
+                order:[
+                    ['id','DESC']
+                ]
+            }).then((respostas) => {
+                res.render('pergunta', {
+                    pergunta,
+                    respostas
+                })
             })
+
+
         }else {
             res.redirect('/')
         }
+    })
+})
+
+
+app.post('/responder', (req, res) => {
+    const corpo = req.body.corpo
+    const perguntaId = req.body.perguntaId
+
+    Resposta.create({
+        corpo,
+        perguntaId
+    }).then(() => {
+        res.redirect('/pergunta/'+perguntaId)
     })
 })
 
